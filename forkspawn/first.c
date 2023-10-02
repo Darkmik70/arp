@@ -13,12 +13,10 @@ int main()
     char * fifo_one = "/tmp/fifo_one"; 
     char * fifo_two = "/tmp/fifo_two"; 
     int ready = 1; 
+
+    // Create fifos for communication between first and second
     mkfifo(fifo_one, 0666); 
     mkfifo(fifo_two, 0666); 
-
-    // Create the child process
-    
-
   
     char input_string[80], send_string[80]; 
 
@@ -28,7 +26,6 @@ int main()
         {
             
             fd1 = open(fifo_one, O_WRONLY); 
-            fork();
             printf("Please, write two integer numbers, separated by commas (,), or q to quit\n");
             
             /* to be sure that the previous is executed immediately */
@@ -45,7 +42,7 @@ int main()
             /* if the first input char is q, exit  */
             if (input_string[0] == 'q') exit(EXIT_SUCCESS) ;
                 
-            // turn msg into an empty string
+            // set ready to 0
             ready = 0;
         }
         else

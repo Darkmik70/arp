@@ -14,10 +14,6 @@ int main()
     char * fifo_one = "/tmp/fifo_one"; // fifo_one is read only, awaits for the message from /first.c
     char * fifo_two = "/tmp/fifo_two"; // fifo_two is write only, sends the message to /first.c
 
-    // 0666 read write permissions 
-    mkfifo(fifo_one, 0666); 
-    mkfifo(fifo_two, 0666); 
-
     char str1[80], str2[80]; 
     char format_string[80]="%d,%d";
     int n1, n2;
@@ -26,8 +22,6 @@ int main()
 
     // This var is used to check if anything arrives from fifo
     ssize_t bytesRead; 
-
-
 
     while (1) 
     { 
@@ -40,7 +34,7 @@ int main()
         {
             exit(EXIT_FAILURE);
         } 
-        else if (bytesRead = 0) 
+        else if (bytesRead == 0) 
         {
             printf("No message received./n");
             exit(EXIT_SUCCESS);
