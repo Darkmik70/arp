@@ -46,13 +46,14 @@ int main()
     /* if the first input char is q, exit  */
     if (input_string[0] == 'q')
     {
-      printf("Main program exiting...\n");
       // Killing the spawned processes
       printf("Killing first process with PID: %d\n", first_pid);
       kill(first_pid, SIGTERM); // or SIGKILL
       printf("Killing second process with PID: %d\n", second_pid);
       kill(second_pid, SIGTERM);
+      sleep(delay);
 
+      printf("Main program exiting...\n");
       exit(EXIT_SUCCESS);
     }
   }
