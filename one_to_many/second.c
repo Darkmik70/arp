@@ -26,7 +26,6 @@ int main(int argc, char *argv[])
     { 
         fd = open(fifo, O_RDONLY); 
         bytesRead = read(fd, str1, 80); 
-        printf("Message read!\n");
 
         if (bytesRead < 0 )
         {
@@ -39,10 +38,10 @@ int main(int argc, char *argv[])
         } 
         else
         {
+            printf("Message received!\n");
+
             /* read numbers from input line */
             sscanf(str1, format_string, &dest, &n1, &n2);
-            printf("Received message: %s\n", str1);
-            printf("Dest: %d, n1: %d, n2: %d\n", dest, n1, n2);
 
             if (str1[0] == 'q')
             {
@@ -51,8 +50,6 @@ int main(int argc, char *argv[])
             }
             else if (id == dest)
             {   
-                printf("This message is for me! \n");
-                printf("n1 %d n2 %d \n", n1, n2);
                 mean = (n1 +n2) / 2.0;
                 printf("mean value is: %f, sum is: %d \n", mean, n1 + n2); 
             }

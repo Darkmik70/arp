@@ -42,8 +42,6 @@ int main()
     sec1 = create_child(konsole, sec_args_1);
     sec2 = create_child(konsole, sec_args_2);
 
-    char input_string[80], send_string[80];
-
     // wait for all the children to die.
     for (int i = 0; i < 3; i++) // threshold 3 as we have 3 children
     {
@@ -63,7 +61,6 @@ int main()
             process, WTERMSIG(child_exit_status));
         }
     } 
-    
     printf("Exiting Father process.. \n");
     return 0;
 }
