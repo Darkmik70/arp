@@ -1,70 +1,66 @@
-
-#include <stdio.h> 
-#include <string.h> 
 #include <fcntl.h> 
+#include <stdio.h> 
+#include <stdlib.h>
+#include <string.h> 
 #include <sys/stat.h> 
 #include <sys/types.h> 
 #include <unistd.h> 
-#include <stdlib.h>
   
-int main() 
+int main(int argc, char *argv[])
 { 
     int fd; // file descriptor
-  
     char * fifo = "/tmp/fifo"; // fifo is read only, awaits for the message from /first.c
+    ssize_t bytesRead; // This var is used to check if anything arrives from fifo
 
-    char str1[80], str2[80]; 
-    char format_string[80]="%d,%d";
+    char str1[80];
+    char format_string[80] = "%d %d,%d";
+    int id, dest; // message specifies who processes the data
     int n1, n2;
-    double mean;
-    char msg[80]; 
+    float mean;
 
-    // This var is used to check if anything arrives from fifo
-    ssize_t bytesRead; 
-
-
+    // identify itself - argc is the count of the arguments, and id is the last passed argument.
+    id = atoi(argv[argc - 1]);
+    printf("This is my id: %d\n", id);
 
     while (1) 
     { 
-        fd = open(fifo,O_RDONLY); 
-        
+        fd = open(fifo, O_RDONLY); 
         bytesRead = read(fd, str1, 80); 
+        printf("Message read!\n");
 
         if (bytesRead < 0 )
         {
             exit(EXIT_FAILURE);
         } 
-        else if (bytesRead = 0) 
+        else if (bytesRead == 0) 
         {
-            printf("No message received./n");
+            printf("No message received.\n");
             exit(EXIT_SUCCESS);
-        }    
+        } 
         else
         {
-            /* if the first input char is q, exit  */
+            /* read numbers from input line */
+            sscanf(str1, format_string, &dest, &n1, &n2);
+            printf("Received message: %s\n", str1);
+            printf("Dest: %d, n1: %d, n2: %d\n", dest, n1, n2);
+
             if (str1[0] == 'q')
             {
                 printf(" Bye \n");
-                exit(EXIT_SUCCESS) ;
+                exit(EXIT_SUCCESS); 
             }
-            else if (str1[0] == '2')
+            else if (id == dest)
+            {   
+                printf("This message is for me! \n");
+                printf("n1 %d n2 %d \n", n1, n2);
+                mean = (n1 +n2) / 2.0;
+                printf("mean value is: %f, sum is: %d \n", mean, n1 + n2); 
+            }
+            else 
             {
-                
-                sleep(2);
+                printf("This message is not for me \n");
             }
-            /* read numbers from input line */
-            sscanf(str1, format_string, &n1, &n2);
-            mean = (n1 + n2) / 2.0; 
-            
-            // Generate message
-            snprintf(msg, sizeof(msg), "mean value is: %f, sum is: %d", mean, n1 + n2); 
-            printf("%s\n", msg);
-            // open second fifo, send the message.
-            fd2 = open(fifo_two,O_WRONLY);
-            write(fd2, msg, strlen(msg)+1);
-            close(fd2);
         }
-       
         close(fd);
     } 
     return 0; 

@@ -12,7 +12,7 @@ int create_child(const char *program, char **arg_list)
     pid_t child_pid = fork();
     if (child_pid != 0)
     {
-        printf("Child process %s with PID: %d  was created", program, child_pid);
+        printf("Child process %s with PID: %d  was created\n", program, child_pid);
         return child_pid;
     }
     else
@@ -30,13 +30,17 @@ int main()
 
     // Arguments
     char* konsole = "konsole";
-    char* first_args[] = {konsole, "-e", "./first", NULL};
-    char* sec_args[] = {konsole, "-e", "./second", NULL};
+    char* first_args[] = {konsole, "-e", "./first", NULL}; 
+    
+    /* This is cumbersome | By having different id, 
+        second will be able to tell when it has to process the message from the first */
+    char* sec_args_1[] = {konsole, "-e", "./second", "1", NULL};
+    char* sec_args_2[] = {konsole, "-e", "./second", "2", NULL};
 
     // create children
     first = create_child(konsole, first_args);
-    sec1 = create_child(konsole, sec_args);
-    sec2 = create_child(konsole, sec_args);
+    sec1 = create_child(konsole, sec_args_1);
+    sec2 = create_child(konsole, sec_args_2);
 
     char input_string[80], send_string[80];
 
@@ -59,6 +63,7 @@ int main()
             process, WTERMSIG(child_exit_status));
         }
     } 
-
+    
+    printf("Exiting Father process.. \n");
     return 0;
 }
