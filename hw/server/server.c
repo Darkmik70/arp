@@ -3,6 +3,8 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <sys/random.h>
+
 
 
 
@@ -50,6 +52,20 @@ int main()
             perror("select()");
         else if (retval)
         {
+            /*
+
+            hile (TRUE) {
+ select fd1 or fd2 or both
+ switch (data available?) {
+ case (fd1 has data && fd2 has data):
+ choose randomly fd, read (fd, data), break
+ case (fd1 has data):
+ fd = fd1, read (fd, data), break
+ case (fd2 has data):
+ fd = fd2, read (fd, data), break
+ default: suspend execution for dt seconds
+ }
+            */
 
             printf("Data is available now.\n");
             // READ THE DATA
