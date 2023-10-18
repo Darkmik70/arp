@@ -10,26 +10,51 @@
   
 int main(int argc,char *argv[])
 { 
-    /*Decrypt fd names*/
+    /* Get file descriptors*/    
+    int fd_ask[2], fd_ans[2];  
 
-    int fd_ask[2], fd_write[2];  
-
-
-    char msg_request[80], msg_value[80]; 
 
     while (1) 
-    { 
-        // ASK FOR THE PERMISION
+    {
+        char msg_ask[80] = "READY", msg_ans[80]; 
+        int ret_val;
 
-
-
-        /*RNG*/
-        int val;
-        getrandom(&val, sizeof(val), 0);
-        /* read a full input line */
-        fgets(msg, 80 , stdin); 
-        write(fd[0], msg, strlen(msg)+1); 
-  
+        // Ask for the permission
+        ret_val = write(fd_ask[1], msg_ask, strlen(msg_ask)); 
+        if (ret_val != strlen(msg_ask))
+        {
+            printf("Write did not return expected value\n");
+            exit(2);    /* Print error message and exit */
+        }
+        // Wait for the answer
+        ret_val = read(fd_ans[0],msg_ans, strlen(msg_ans));
+        if (ret_val != strlen(msg_ans)) 
+        {
+            printf("Read did not return expected value\n");
+            exit(3);    /* Print error message and exit */
+        }
+        else
+        {
+            // Message acquired
+            if (atoi(&msg_ans[0]) == 0)
+            {
+                // Request Rejected
+                int time = 4;
+                sleep(time);
+                continue;
+            }
+            else
+            {
+                // Request Approved
+                 int val;
+                getrandom(&val, sizeof(val), 0); // RNG
+                /* Put generated value into the message */
+                char msg[80]; //size of ascii is 20
+                snprintf(msg, strlen(msg), "%d", val);
+                /* Write the message into first pipeline*/
+                write(fd_ask[1], msg, strlen(msg));
+            }
+        } 
     }
     return 0; 
 }
