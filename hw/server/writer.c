@@ -16,7 +16,7 @@ int main(int argc,char *argv[])
 
     while (1) 
     {
-        char msg_ask[80] = "READY", msg_ans[80]; 
+        char msg_ask[80] = "R", msg_ans[80]; 
         int ret_val;
 
         // Ask for the permission

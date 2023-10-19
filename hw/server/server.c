@@ -3,16 +3,105 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include <sys/random.h>
 
+void create_pipes(int *pipe_set[]);
+void write_message(int fd, char* msg);
+void read_message(int fd, char *msg);
 
 
+int main()
+{
+    int cell[2]; // Cell to be changed by W0 and W1
 
+    /* server initzialization*/
+    int retval, m, n; 
+    char line[80];
+
+    char msg_approve[80] = "1", msg_reject[80] = "0";
+
+    /* Create unnamed pipes */
+    int w0_ask[2], w0_ans[2]/*, w1_ask[2], w1_ans[2], r0_ask[2], r0_ans[2], r1_ask[2], r1_ans[2]*/;
+    int *pipes[] = {w0_ask, w0_ans/*, w1_ask, w1_ans, r0_ask, r0_ans, r1_ask, r1_ans*/};
+
+    fd_set readfds = {w0_ask[0]/*, w0_ans[0]/*, w1_ask[0], w1_ans[0], r0_ask[0], r0_ans[0], r1_ask[0], r1_ans[0]*/};
+    
+    create_pipes(pipes);
+
+    fd_set rfds;
+    struct timeval tv;
+    
+    FD_ZERO(&rfds);
+    FD_SET(w0_ask[0], &rfds);
+
+
+    while (true)
+    {
+        int tempCell[2];        
+        char msg[80];
+        int bytesRead;
+
+        /* Wait up to five seconds. */ 
+        tv.tv_sec = 5;  // It is a good practice to reainitialize timout each time select is invoked
+        tv.tv_usec = 0;
+
+        retval = select(1, &readfds, NULL, NULL, &tv);
+        if (retval == -1)
+        {
+            perror("select()");
+        }
+        else if (retval)
+        {
+            /* Writer 0 */
+            if (FD_ISSET(w0_ask[0], &rfds))
+            {
+                read_message(w0_ask[0], msg);
+                if (msg[0] == 'R')
+                {
+                    printf("Writer 0 requests to WRITE");
+                    // if (cell[0] <= cell[1])
+                    if (true)
+                    {
+                        // Allow W0
+                        /* Send message allowing w0 to write*/
+                        printf("Writer 0 - request approved");
+                        write_message(w0_ans[1], msg_approve);
+
+                        /* await for the return value */
+                        printf("Writer 0 - Waiting for the number");
+                        read_message(w0_ask[0], &msg);
+
+                        printf(" THE MESSAGE FROM WRITER 0 is = %s", msg);
+                        tempCell[0] = atoi(msg);
+
+                    }
+                    else 
+                    {   
+                        printf("Writer 0 - request rejected");
+                    }
+
+                }
+            }
+        }
+        cell[0] = tempCell[0];
+        cell[1] = tempCell[1];
+    }
+    return 0;
+}
+
+/**
+ * Creates pipes for inter-process communication.
+ *
+ * @param pipe_set an array of integer arrays to store the file descriptors of the pipes
+ */
 void create_pipes(int *pipe_set[])
 {
-    int num_pipes = sizeof(&pipe_set); // / sizeof(pipe_set)
+    int num_pipes = sizeof(pipe_set) / sizeof(int*);
+
     for (int i = 0; i < num_pipes; i++)
     {
+
         if (pipe(pipe_set[i]) < 0) /* Test for success */
         {
             printf("Unable to create a pipe; errno=%d\n", errno);
@@ -23,102 +112,43 @@ void create_pipes(int *pipe_set[])
 }
 
 
-int main()
+/**
+ * Writes a message to a file descriptor and checks if the write operation was successful.
+ * @param fd: an integer representing the file descriptor to write to.
+ * @param msg: a pointer to a character array representing the message to write.
+ */
+void write_message(int fd, char *msg)
 {
-    /* server initzialization*/
-    int retval, m, n; 
-    struct timeval tv;
-    char line[80];
-    int cell[2];
-
-    /* Create unnamed pipes */
-    int w0_ask[2], w0_ans[2], w1_ask[2], w1_ans[2], r0_ask[2], r0_ans[2], r1_ask[2], r1_ans[2];
-    int *pipes[] = {w0_ask, w0_ans, w1_ask, w1_ans, r0_ask, r0_ans, r1_ask, r1_ans};
-
-    fd_set readfds = {w0_ask[0], w0_ans[0], w1_ask[0], w1_ans[0], r0_ask[0], r0_ans[0], r1_ask[0], r1_ans[0]};
-    
-    create_pipes(pipes);
-
-    
-    while (true)
+    int retval;
+    write(fd, msg, strlen(msg));
+    if (retval != strlen(msg))
     {
-
-        /* Wait up to five seconds. */ 
-        tv.tv_sec = 5;  // It is a good practice to reainitialize timout each time select is invoked
-        tv.tv_usec = 0;
-
-        retval = select(1, &readfds, NULL, NULL, &tv);
-        if (retval == -1)
-            perror("select()");
-        else if (retval)
-        {
-            /*
-
-            hile (TRUE) {
- select fd1 or fd2 or both
- switch (data available?) {
- case (fd1 has data && fd2 has data):
- choose randomly fd, read (fd, data), break
- case (fd1 has data):
- fd = fd1, read (fd, data), break
- case (fd2 has data):
- fd = fd2, read (fd, data), break
- default: suspend execution for dt seconds
- }
-            */
-
-            printf("Data is available now.\n");
-            // READ THE DATA
-            /* FD_ISSET(0, &rfds) will be true. */
-            n = read(0, line, 80);
-            line[n] = '\0';
-            m = write(1, line, n);
-
-
-            if (cell[0] == cell[1] == 0)
-            {
-                // allow both W1 and W0
-            }
-            if (cell[0] <= cell[1]) 
-            {
-                // Accept W0
-            }
-            if (cell[1] <= cell[0])
-            {
-                // Accept W1
-            }
-
-
-        }
-        else printf("No data within five seconds.\n");
+        printf("Write did not return expected value\n");
+        exit(1); /* Print error message and exit */
     }
-
-
-
-    // SERVER LOGIC
-    /*
-    accept one of the queries under condition
-    conditions for W0, W1:
-    - if cell[0]==cell[1]==0 accept both
-    - if cell[0]<=cell[1] accept W0
-    - if cell[1]<=cell[0] accept W1
-
-    conditions for R0, R1
-    - if cell[0] has changed accept R0
-    - if cell[1] has changed accept R1
-    */
-
-    return 0;
+    printf("Message sent successfully!");
 }
 
-
-/*
-Hints:
-    •you can read random numbers from /dev/random (see slides)
-    •test separately the W and R processes
-    •use ascii characters instead of integer
-    •try different timeout values, including a zero value
-    •count how many numbers have been stored in S by W0 and W1 and compare with the  
-    logfiles lengths
-    •try to estimate the speed (when timeout is zero in particular).
-*/
+/**
+ * Reads a message from a file descriptor.
+ * @param fd the file descriptor to read from
+ * @param msg a pointer to a buffer to store the message
+ */
+void read_message(int fd, char *msg)
+{
+    int bytesRead;
+    bytesRead = read(fd, msg, strlen(msg));
+    if (bytesRead < 0)
+    {
+        exit(EXIT_FAILURE);
+    }
+    else if (bytesRead == 0)
+    {
+        printf("No message received.\n");
+        exit(EXIT_SUCCESS);
+    }
+    else
+    {
+        printf("Message received!\n");
+    }
+}
