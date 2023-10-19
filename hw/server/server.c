@@ -5,45 +5,42 @@
 #include <stdbool.h>
 #include <string.h>
 #include <sys/random.h>
+#include <sys/select.h>
 
-void create_pipes(int *pipe_set[]);
-void write_message(int fd, char* msg);
+void write_message(int fd, char *msg);
 void read_message(int fd, char *msg);
 
-
-int main()
+int main(int argc,char *argv[])
 {
     int cell[2]; // Cell to be changed by W0 and W1
 
     /* server initzialization*/
-    int retval, m, n; 
+    int retval, m, n;
     char line[80];
 
     char msg_approve[80] = "1", msg_reject[80] = "0";
 
     /* Create unnamed pipes */
-    int w0_ask[2], w0_ans[2]/*, w1_ask[2], w1_ans[2], r0_ask[2], r0_ans[2], r1_ask[2], r1_ans[2]*/;
-    int *pipes[] = {w0_ask, w0_ans/*, w1_ask, w1_ans, r0_ask, r0_ans, r1_ask, r1_ans*/};
+    int w0_ask[2], w0_ans[2] /*, w1_ask[2], w1_ans[2], r0_ask[2], r0_ans[2], r1_ask[2], r1_ans[2]*/;
+    int *pipes[] = {w0_ask, w0_ans /*, w1_ask, w1_ans, r0_ask, r0_ans, r1_ask, r1_ans*/};
 
-    fd_set readfds = {w0_ask[0]/*, w0_ans[0]/*, w1_ask[0], w1_ans[0], r0_ask[0], r0_ans[0], r1_ask[0], r1_ans[0]*/};
-    
-    create_pipes(pipes);
+    fd_set readfds = {w0_ask[0] /*, w0_ans[0]/*, w1_ask[0], w1_ans[0], r0_ask[0], r0_ans[0], r1_ask[0], r1_ans[0]*/};
+
 
     fd_set rfds;
     struct timeval tv;
-    
+
     FD_ZERO(&rfds);
     FD_SET(w0_ask[0], &rfds);
 
-
     while (true)
     {
-        int tempCell[2];        
+        int tempCell[2];
         char msg[80];
         int bytesRead;
 
-        /* Wait up to five seconds. */ 
-        tv.tv_sec = 5;  // It is a good practice to reainitialize timout each time select is invoked
+        /* Wait up to five seconds. */
+        tv.tv_sec = 5; // It is a good practice to reainitialize timout each time select is invoked
         tv.tv_usec = 0;
 
         retval = select(1, &readfds, NULL, NULL, &tv);
@@ -70,46 +67,26 @@ int main()
 
                         /* await for the return value */
                         printf("Writer 0 - Waiting for the number");
-                        read_message(w0_ask[0], &msg);
+                        read_message(w0_ask[0], msg);
 
                         printf(" THE MESSAGE FROM WRITER 0 is = %s", msg);
                         tempCell[0] = atoi(msg);
-
                     }
-                    else 
-                    {   
+                    else
+                    {
                         printf("Writer 0 - request rejected");
                     }
-
                 }
             }
         }
+        else 
+            printf("No data within five seconds.\n");
         cell[0] = tempCell[0];
         cell[1] = tempCell[1];
     }
     return 0;
 }
 
-/**
- * Creates pipes for inter-process communication.
- *
- * @param pipe_set an array of integer arrays to store the file descriptors of the pipes
- */
-void create_pipes(int *pipe_set[])
-{
-    int num_pipes = sizeof(pipe_set) / sizeof(int*);
-
-    for (int i = 0; i < num_pipes; i++)
-    {
-
-        if (pipe(pipe_set[i]) < 0) /* Test for success */
-        {
-            printf("Unable to create a pipe; errno=%d\n", errno);
-            exit(1); /* Print error message and exit */
-        }
-    }
-    printf("Pipes created successfully\n");
-}
 
 
 /**
