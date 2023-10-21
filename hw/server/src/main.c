@@ -20,39 +20,21 @@ int main()
     int *pipes[] = {w0_ask, w0_ans, w1_ask, w1_ans, r0_ask, r0_ans, r1_ask, r1_ans};
     create_pipes(pipes);
 
-    int w0_ask_read = w0_ask[0];
-    int w0_ask_write = w0_ask[1];
-    int w0_ans_read = w0_ans[0];
-    int w0_ans_write = w0_ans[1];
-
-    int w1_ask_read = w1_ask[0];
-    int w1_ask_write = w1_ask[1];
-    int w1_ans_read = w1_ans[0];
-    int w1_ans_write = w1_ans[1];
-
-    int r0_ask_read = r0_ask[0];
-    int r0_ask_write = r0_ask[1];
-    int r0_ans_read = r0_ans[0];
-    int r0_ans_write = r0_ans[1];
-
-    int r1_ask_read = r1_ask[0];
-    int r1_ask_write = r1_ask[1];
-    int r1_ans_read = r1_ans[0];
-    int r1_ans_write = r1_ans[1];
+    char w0_args[80], w1_args[80], r0_args[80], r1_args[80], server_args[80];
+    sscanf(w0_args, "%d %d %d %d", w0_ask[0], w0_ask[1], w0_ans[0], w0_ans[1]);
+    sscanf(w1_args, "%d %d %d %d", w1_ask[0], w1_ask[1], w1_ans[0], w1_ans[1]);
+    sscanf(r0_args, "%d %d %d %d", r0_ask[0], r0_ask[1], r0_ans[0], r0_ans[1]);
+    sscanf(r1_args, "%d %d %d %d", r1_ask[0], r1_ask[1], r1_ans[0], r1_ans[1]);
 
     /* Create child processes*/
-    char server_args[80], writer_args[80], reader_args[80];
+    printf("Creating server...");
+    sscanf(server_args, "%s %s %s %s", w0_args, w0_ans, w1_args, r0_args, r1_args);
+    char *server_arg_list[] = {"konsole", "-e", "./server", server_args, NULL};
+    child_server = summon("konsole", server_arg_list);
 
-    // // Server requires only reading from requests and write answers
-    // printf("Creating server...");
-    // snprintf(server_args, 80, "%d %d", w0_ask_read, w0_ans_write);
-    // char *server_arg_list[] = {"konsole", "-e", "./server", server_args, NULL};
-    // child_server = summon("konsole", server_arg_list);
-
-    // printf("Creating Writer_0....\n");
-    // snprintf(writer_args, 80, "%d %d", w0_ask_write, w0_ans_read);
-    // char *writer_args_list[] = {"konsole", "-e", "./writer", writer_args, NULL};
-    // child_w0 = summon("konsole", writer_args_list);
+    printf("Creating Writer_0....\n");
+    char *writer0_args_list[] = {"konsole", "-e", "./writer", w0_args, NULL};
+    child_w0 = summon("konsole", writer0_args_list);
 
     while (1)
     {

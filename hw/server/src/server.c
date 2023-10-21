@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     char line[80];
     char msg_approve[80] = "1", msg_reject[80] = "0";
     int w0_ask, w0_ans /*, w1_ask[2], w1_ans[2], r0_ask[2], r0_ans[2], r1_ask[2], r1_ans[2]*/;
-    int pipes[2] = {w0_ask, w0_ans /*, w1_ask, w1_ans, r0_ask, r0_ans, r1_ask, r1_ans*/};
+    int pipes[] = {w0_ask, w0_ans /*, w1_ask, w1_ans, r0_ask, r0_ans, r1_ask, r1_ans*/};
 
     // This is not safe but it has to do for the time being
     char* format_string = "%d %d"; // maybe it will be better to pass arguments with a trailing coma 
