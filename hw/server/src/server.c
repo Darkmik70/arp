@@ -13,47 +13,84 @@ void read_message(int fd, char *msg);
 int main(int argc, char *argv[])
 {
 
-
+    int tempCell[2];
+    char msg[80];
     int cell[2]; // Cell to be changed by W0 and W1
     int retval, m, n;
     char line[80];
     char msg_approve[80] = "1", msg_reject[80] = "0";
-    int w0_ask, w0_ans /*, w1_ask[2], w1_ans[2], r0_ask[2], r0_ans[2], r1_ask[2], r1_ans[2]*/;
-    int pipes[] = {w0_ask, w0_ans /*, w1_ask, w1_ans, r0_ask, r0_ans, r1_ask, r1_ans*/};
+    int w0_ask[2], w0_ans[2], w1_ask[2], w1_ans[2], r0_ask[2], r0_ans[2], r1_ask[2], r1_ans[2];
 
-    // This is not safe but it has to do for the time being
-    char* format_string = "%d %d"; // maybe it will be better to pass arguments with a trailing coma 
-    sscanf(argv[1], format_string, &w0_ask, &w0_ans);
-    printf("New file descriptors created with given ids w0 = %d %d\n", w0_ask, w0_ans);
+    /* Get fds from father */
+    if (argc != 5)
+    {
+        printf(" Received wrong arguments\n");
+        sleep(5);
+        exit(1); /* Print error message and exit */
+    }
+    else
+    {
+        printf("Those are the arguments: \n");
+        sscanf(argv[1], "%d %d %d %d", &w0_ask[0], &w0_ask[1], &w0_ans[0], &w0_ans[1]);
+        sscanf(argv[2], "%d %d %d %d", &w1_ask[0], &w1_ask[1], &w1_ans[0], &w1_ask[1]);
+        sscanf(argv[3], "%d %d %d %d", &r0_ask[0], &r0_ask[1], &r0_ans[0], &r0_ans[1]);
+        sscanf(argv[4], "%d %d %d %d", &r1_ask[0], &r1_ask[1], &r1_ans[0], &r1_ans[1]);
+    }
+    // Not quite the state of art but does the jobl
+    const int max_fd = r1_ask[1] + 1;
 
-    fd_set readfds = {w0_ask /*, w0_ans[0]/*, wq1_ask[0], w1_ans[0], r0_ask[0], r0_ans[0], r1_ask[0], r1_ans[0]*/};
+    fd_set readfds;
     struct timeval tv;
 
-    FD_ZERO(&readfds);
-    FD_SET(w0_ask, &readfds);
-
+    printf("we got here \n");
     while (true)
     {
-        int tempCell[2];
-        char msg[80];
+
+        FD_ZERO(&readfds);
+        FD_SET(w0_ask[0], &readfds);
+        FD_SET(w1_ask[0], &readfds);
+        FD_SET(r0_ask[0], &readfds);
+        FD_SET(r1_ask[0], &readfds);
+
         int bytesRead;
 
         /* Wait up to five seconds. */
         tv.tv_sec = 5; // It is a good practice to reainitialize timout each time select is invoked
         tv.tv_usec = 0;
-
-        retval = select(w0_ask+1, &readfds, NULL, NULL, &tv);
+        retval = select(19, &readfds, NULL, NULL, &tv); // FIXME
         if (retval == -1)
         {
             perror("select()");
+            sleep(10);
         }
         else if (retval)
         {
+            sleep(5);
             printf(" Pipe selected\n");
             /* Writer 0 */
-            if (FD_ISSET(w0_ask, &readfds))
+            if (FD_ISSET(w0_ask[0], &readfds))
             {
-                read_message(w0_ask, msg);
+                printf(" read the message\n");
+
+                // read_message(w0_ask[0], msg);
+                int bytesRead;
+                printf("read The message, this is the fd = %d\n",w0_ask[0]);
+                sleep(5);
+                bytesRead = read(w0_ask[0], msg, 80);
+                printf("Please tell me if this is the limit\n");
+                if (bytesRead < 0)
+                {
+                    exit(EXIT_FAILURE);
+                }
+                else if (bytesRead == 0)
+                {
+                    printf("No message received.\n");
+                    exit(EXIT_SUCCESS);
+                }
+                else
+                {
+                    printf("Message received!\n");
+                }
                 if (msg[0] == 'R')
                 {
                     printf("Writer 0 requests to WRITE");
@@ -63,11 +100,11 @@ int main(int argc, char *argv[])
                         // Allow W0
                         /* Send message allowing w0 to write*/
                         printf("Writer 0 - request approved");
-                        write_message(w0_ans, msg_approve);
+                        write_message(w0_ans[1], msg_approve);
 
                         /* await for the return value */
                         printf("Writer 0 - Waiting for the number");
-                        read_message(w0_ask, msg);
+                        read_message(w0_ask[0], msg);
 
                         printf(" THE MESSAGE FROM WRITER 0 is = %s", msg);
                         tempCell[0] = atoi(msg);
@@ -114,7 +151,10 @@ void write_message(int fd, char *msg)
 void read_message(int fd, char *msg)
 {
     int bytesRead;
-    bytesRead = read(fd, msg, strlen(msg));
+    printf("read The message, this is the fd = %d\n", fd);
+    sleep(5);
+    bytesRead = read(fd, msg, 80 - 1);
+    printf("Please tell me if this is the limit\n");
     if (bytesRead < 0)
     {
         exit(EXIT_FAILURE);

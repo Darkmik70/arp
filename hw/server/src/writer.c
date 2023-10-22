@@ -7,17 +7,20 @@
 #include <sys/random.h>
 #include <unistd.h> 
 
+#define MSG_MAX_LEN 80;
+
   
 int main(int argc,char *argv[])
 { 
 
     /* Get file descriptors*/    
-    int fd_ask_write, fd_ans_read;  
+    int fd_ask[2], fd_ans[2];  
+
+    printf("This is the number of arguments we got: %d \n Lets see what we got for the last %s", argc, argv[argc-1]);
 
     // This is not safe but it has to do for the time being
-    char* format_string = "%d %d"; // maybe it will be better to pass arguments with a trailing coma 
-    sscanf(argv[1], format_string, &fd_ask_write, &fd_ans_read);
-    printf("New file descriptors created with given ids w0 = %d %d\n", fd_ask_write, fd_ans_read);
+    char* format_string = "%d %d %d %d"; // maybe it will be better to pass arguments with a trailing coma 
+    sscanf(argv[argc - 1], format_string, &fd_ask[0], &fd_ask[1], &fd_ans[0], &fd_ans[1]);
 
     while (1) 
     {
@@ -25,7 +28,8 @@ int main(int argc,char *argv[])
         int ret_val;
 
         // Ask for the permission
-        ret_val = write(fd_ask_write, msg_ask, strlen(msg_ask)); 
+        ret_val = write(fd_ask[1], msg_ask, strlen(msg_ask)); 
+        printf("Writing to the fd = %d\n", fd_ask[1]);
         if (ret_val != strlen(msg_ask))
         {
             printf("Write did not return expected value\n");
@@ -36,7 +40,7 @@ int main(int argc,char *argv[])
             printf("Message sent successfully!\n");
         }
         // Wait for the answer
-        ret_val = read(fd_ans_read,msg_ans, strlen(msg_ans));
+        ret_val = read(fd_ans[0],msg_ans, strlen(msg_ans));
         if (ret_val != strlen(msg_ans)) 
         {
             printf("Read did not return expected value\n");
@@ -48,7 +52,7 @@ int main(int argc,char *argv[])
             if (atoi(&msg_ans[0]) == 0)
             {
                 // Request Rejected
-                int time = 4;
+                int time = 70;
                 sleep(time);
                 continue;
             }
@@ -61,7 +65,7 @@ int main(int argc,char *argv[])
                 char msg[80]; //size of ascii is 20
                 snprintf(msg, strlen(msg), "%d", val);
                 /* Write the message into first pipeline*/
-                write(fd_ask_write, msg, strlen(msg));
+                write(fd_ask[1], msg, strlen(msg));
             }
         } 
     }
