@@ -13,11 +13,11 @@
 int main(int argc, char *argv[])
 {
     // sleep(20);
-    int fd_ask[2], fd_ans[2]; // file descriptors
+    int fd_read, fd_write; // file descriptors
 
     /*Assign correct fd numbers*/
     char *format_string = "%d %d"; // maybe it will be better to pass arguments with a trailing coma
-    sscanf(argv[argc - 1], format_string, &fd_ask[1], &fd_ans[0]);
+    sscanf(argv[argc - 1], format_string, &fd_read, &fd_write);
 
     bool isReady = true; // ready during the first state
 
@@ -31,8 +31,8 @@ int main(int argc, char *argv[])
         if (isReady)
         {
             /* Ask for the permission to write*/
-            printf("Asking for permission to write on fd: %d \n", fd_ask[1]);
-            ret_val = write(fd_ask[1], msg_ask, sizeof(msg_ask));
+            printf("Asking for permission to write on fd: %d \n", fd_write);
+            ret_val = write(fd_write, msg_ask, sizeof(msg_ask));
             printf("ret_Val = %d \n", ret_val);
             if (ret_val != sizeof(msg_ask))
             {
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
         else
         {
             /* Wait for reply*/
-            ret_val = read(fd_ans[0], msg_read, sizeof(msg_read));
+            ret_val = read(fd_read, msg_read, sizeof(msg_read));
             if (ret_val != sizeof(msg_read))
             {
                 printf("Read did not return expected value\n");
@@ -65,14 +65,14 @@ int main(int argc, char *argv[])
                 snprintf(msg_send,sizeof(msg_send), "%d", random_num);
                 printf("Message generated: %s\n", msg_send);
 
-                ret_val = write(fd_ask[1], msg_send, sizeof(msg_send));
+                ret_val = write(fd_write, msg_send, sizeof(msg_send));
                 if (ret_val != sizeof(msg_send))
                 {
                     printf("Write did not return expected value\n");
                     sleep(5);
                     exit(1); /* Print error message and exit */
                 }
-                printf("Message %s sent succesfully to fd:%d\n", msg_send, fd_ask[1]);
+                printf("Message %s sent succesfully to fd:%d\n", msg_send, fd_write);
             }
             else if (msg_read[0] == 'N')
             {
